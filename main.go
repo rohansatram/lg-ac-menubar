@@ -346,12 +346,16 @@ func (c *Client) postControl(deviceID string, payload map[string]interface{}) er
 
 // Server Component
 type Server struct {
-	client    *Client
-	listener  net.Listener
-	mu        sync.Mutex
-	cachedACs []ACDevice
-	cfg       Config
-	Port      int
+	client              *Client
+	listener            net.Listener
+	mu                  sync.Mutex
+	cachedACs           []ACDevice
+	cfg                 Config
+	Port                int
+	lastPowerChangeTime map[string]time.Time
+	lastPowerState      map[string]bool
+	lastTempChangeTime  map[string]time.Time
+	lastTempState       map[string]int
 }
 
 type SetupRequest struct {
@@ -377,10 +381,14 @@ func NewServer(cfg Config) (*Server, error) {
 
 	port := listener.Addr().(*net.TCPAddr).Port
 	s := &Server{
-		cfg:      cfg,
-		client:   NewClient(cfg),
-		listener: listener,
-		Port:     port,
+		cfg:                 cfg,
+		client:              NewClient(cfg),
+		listener:            listener,
+		Port:                port,
+		lastPowerChangeTime: make(map[string]time.Time),
+		lastPowerState:      make(map[string]bool),
+		lastTempChangeTime:  make(map[string]time.Time),
+		lastTempState:       make(map[string]int),
 	}
 
 	mux := http.NewServeMux()
@@ -519,6 +527,18 @@ func (s *Server) handleGetDevices(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.mu.Lock()
+	now := time.Now()
+	for i := range devices {
+		id := devices[i].ID
+		// Hold user's desired power state for 15s to allow cloud/device handshake
+		if t, ok := s.lastPowerChangeTime[id]; ok && now.Sub(t) < 15*time.Second {
+			devices[i].IsOn = s.lastPowerState[id]
+		}
+		// Hold user's desired temperature for 15s to allow cloud/device handshake
+		if t, ok := s.lastTempChangeTime[id]; ok && now.Sub(t) < 15*time.Second {
+			devices[i].TargetTemp = s.lastTempState[id]
+		}
+	}
 	s.cachedACs = devices
 	s.mu.Unlock()
 
@@ -538,6 +558,8 @@ func (s *Server) handlePower(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.mu.Lock()
+	s.lastPowerChangeTime[req.DeviceID] = time.Now()
+	s.lastPowerState[req.DeviceID] = req.On
 	for i := range s.cachedACs {
 		if s.cachedACs[i].ID == req.DeviceID {
 			s.cachedACs[i].IsOn = req.On
@@ -562,6 +584,8 @@ func (s *Server) handleTemperature(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.mu.Lock()
+	s.lastTempChangeTime[req.DeviceID] = time.Now()
+	s.lastTempState[req.DeviceID] = req.TargetTemp
 	for i := range s.cachedACs {
 		if s.cachedACs[i].ID == req.DeviceID {
 			s.cachedACs[i].TargetTemp = req.TargetTemp

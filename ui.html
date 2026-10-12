@@ -516,6 +516,17 @@
           throw new Error(err);
         }
         const data = await res.json();
+        const now = Date.now();
+        data.forEach(incoming => {
+          const lastAction = recentActionTimes[incoming.id];
+          if (lastAction && (now - lastAction < 15000)) {
+            const existing = devices.find(d => d.id === incoming.id);
+            if (existing) {
+              incoming.isOn = existing.isOn;
+              incoming.targetTemp = existing.targetTemp;
+            }
+          }
+        });
         devices = data;
         render();
       } catch (err) {
@@ -598,6 +609,7 @@
     const tempDebounceTimers = {};
     const lastCommittedTemps = {};
     const pendingTargetTemps = {};
+    const recentActionTimes = {};
 
     async function togglePower(device) {
       if (!device.isOnline) {
@@ -609,6 +621,7 @@
       }
       powerInFlight[device.id] = true;
 
+      recentActionTimes[device.id] = Date.now();
       const targetState = !device.isOn;
       device.isOn = targetState;
       render();
@@ -625,6 +638,7 @@
         }
       } catch (err) {
         showError(err.message.replace(/^Failed:\s*/, ''));
+        delete recentActionTimes[device.id];
         device.isOn = !targetState;
         render();
       } finally {
@@ -635,6 +649,7 @@
     function changeTemp(device, delta) {
       if (!device.isOnline || !device.isOn) return;
 
+      recentActionTimes[device.id] = Date.now();
       const current = device.targetTemp || 24;
       const nextTemp = Math.min(30, Math.max(16, current + delta));
       if (nextTemp === current) return;
