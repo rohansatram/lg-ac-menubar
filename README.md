@@ -30,22 +30,32 @@ A super-lightweight, native macOS menu bar app to control **LG ThinQ Air Conditi
 
 ---
 
-## Quick Start
+## Installation
 
-### 1. Build & Run
+### Option 1: Download Pre-Built App (Recommended)
+
+1. Download the latest **`LG-AC-macOS-arm64.zip`** from [Releases](https://github.com/rohansatram/lg-ac-menubar/releases).
+2. Unzip the file and move **`LG AC.app`** into your `/Applications` folder.
+3. Open **LG AC** from Spotlight (`Cmd + Space`) or Launchpad.
+
+> **Note on macOS Gatekeeper:** Because this open-source build is not signed with an Apple Developer ID certificate, macOS might show a warning on first open. Simply **Right-click (Control-click) `LG AC.app` → Open → Click Open**, or run:
+> ```bash
+> xattr -cr "/Applications/LG AC.app"
+> ```
+
+---
+
+### Option 2: Build from Source
 
 ```bash
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/lg-ac-menubar.git
+git clone https://github.com/rohansatram/lg-ac-menubar.git
 cd lg-ac-menubar
 
-# Build the app bundle
-make app
+# Build and install to /Applications
+make install
 
 # Launch
-make run
-# or simply:
-open "LG AC.app"
+open "/Applications/LG AC.app"
 ```
 
 ### 2. First-Time Setup

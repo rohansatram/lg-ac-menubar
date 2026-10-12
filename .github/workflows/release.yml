@@ -1,0 +1,34 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-14
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Build macOS App Bundle
+        run: |
+          go build -o "LG AC.app/Contents/MacOS/lg-ac-menubar" .
+          chmod +x "LG AC.app/Contents/MacOS/lg-ac-menubar"
+          zip -r -y -q LG-AC-macOS-arm64.zip "LG AC.app"
+
+      - name: Create Release & Upload Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: LG-AC-macOS-arm64.zip
+          generate_release_notes: true

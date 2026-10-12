@@ -5,6 +5,7 @@ lg-thinq-go
 *.dll
 *.so
 *.dylib
+*.zip
 
 # App bundle compiled binary (keep bundle Info.plist metadata in git)
 LG AC.app/Contents/MacOS/lg-ac-menubar
