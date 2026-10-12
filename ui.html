@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LG AC Controller</title>
+  <style>
+    :root {
+      --bg: #1c1c1e;
+      --card-bg: rgba(255, 255, 255, 0.06);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.6);
+      --accent: #0a84ff;
+      --accent-glow: rgba(10, 132, 255, 0.25);
+      --on-green: #30d158;
+      --on-glow: rgba(48, 209, 88, 0.35);
+      --off-gray: #48484a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      width: 340px;
+      padding: 16px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      max-height: 520px;
+    }
+
+    body::-webkit-scrollbar {
+      width: 6px;
+    }
+    body::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .title {
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: -0.2px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+    }
+
+    /* Cards */
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .ac-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .ac-card.is-on {
+      border-color: rgba(48, 209, 88, 0.3);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .row-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .ac-identity {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ac-name {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+
+    .status-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+    }
+
+    .status-badge.on {
+      background: var(--on-glow);
+      color: var(--on-green);
+      border: 1px solid rgba(48, 209, 88, 0.4);
+    }
+
+    .status-badge.offline {
+      background: rgba(255, 159, 10, 0.15);
+      color: #ff9f0a;
+      border: 1px solid rgba(255, 159, 10, 0.3);
+    }
+
+    .ac-card.is-offline {
+      opacity: 0.55;
+      background: rgba(255, 255, 255, 0.03);
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+    .ac-card.is-offline:hover {
+      opacity: 0.75;
+    }
+
+    .room-temp {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-left: 1px;
+    }
+
+    .mode-badge.offline {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    .power-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-secondary);
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .power-btn:hover {
+      transform: scale(1.08);
+    }
+    .power-btn:active {
+      transform: scale(0.95);
+    }
+
+    .power-btn.on {
+      background: var(--on-green);
+      color: #000;
+      box-shadow: 0 0 12px var(--on-glow);
+      font-weight: bold;
+    }
+
+    .row-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .mode-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .mode-badge:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .temp-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-primary);
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .step-btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: scale(1.06);
+    }
+    .step-btn:active:not(:disabled) {
+      transform: scale(0.94);
+    }
+    .step-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .temp-display {
+      font-size: 19px;
+      font-weight: 700;
+      min-width: 44px;
+      text-align: center;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+    }
+
+    .ac-card:not(.is-on) .temp-display,
+    .ac-card:not(.is-on) .step-btn,
+    .ac-card:not(.is-on) .mode-badge {
+      opacity: 0.35;
+    }
+
+    /* Onboarding / Setup View */
+    .setup-view {
+      padding: 10px 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+    }
+
+    .setup-hero {
+      font-size: 36px;
+      margin-bottom: -4px;
+    }
+
+    .setup-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+
+    .setup-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      margin-top: -8px;
+    }
+
+    .setup-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .step-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .portal-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .portal-btn:hover {
+      background: #0077ed;
+      transform: translateY(-1px);
+    }
+
+    .setup-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--card-border);
+      color: var(--text-primary);
+      padding: 8px 10px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-family: monospace;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+    .setup-input:focus {
+      border-color: var(--accent);
+    }
+
+    .country-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .country-input {
+      width: 54px;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--card-border);
+      color: var(--text-primary);
+      padding: 4px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      outline: none;
+    }
+
+    .connect-btn {
+      width: 100%;
+      background: var(--on-green);
+      color: #000;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .connect-btn:hover {
+      box-shadow: 0 0 14px var(--on-glow);
+      transform: translateY(-1px);
+    }
+    .connect-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .loading-spinner {
+      text-align: center;
+      padding: 30px 0;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .notification {
+      position: fixed;
+      bottom: 8px;
+      left: 16px;
+      right: 16px;
+      background: #ff453a;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 500;
+      display: none;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- App Header -->
+  <header>
+    <div class="title">
+      <span>❄️</span> LG Air Conditioners
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="refreshBtn" title="Refresh">↻</button>
+      <button class="icon-btn" id="quitBtn" title="Quit App">✕</button>
+    </div>
+  </header>
+
+  <!-- State Views -->
+  <div id="loadingView" class="loading-spinner">Connecting to LG...</div>
+
+  <!-- Setup / Onboarding View -->
+  <div id="setupView" class="setup-view" style="display: none;">
+    <div class="setup-hero">❄️</div>
+    <div class="setup-title">Connect LG ThinQ Account</div>
+    <div class="setup-desc">Control your air conditioners directly from the macOS menu bar.</div>
+
+    <div class="setup-box">
+      <div class="step-title">1. Obtain Access Token</div>
+      <button class="portal-btn" id="openPortalBtn">
+        Open LG Token Portal ↗
+      </button>
+      <div style="font-size: 11px; color: var(--text-secondary); line-height: 1.3;">
+        Sign in to LG ThinQ, click <b>"Create Token"</b>, select all permissions, and copy the token.
+      </div>
+    </div>
+
+    <div class="setup-box">
+      <div class="step-title">2. Paste Token</div>
+      <div style="display: flex; gap: 6px; align-items: center;">
+        <input type="text" class="setup-input" id="tokenInput" placeholder="thinqpat_..." autocomplete="off" spellcheck="false" />
+        <button type="button" class="icon-btn" id="pasteBtn" style="padding: 7px 10px; background: rgba(255,255,255,0.1); border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap;" title="Paste from clipboard">📋 Paste</button>
+      </div>
+      
+      <div class="country-row">
+        <span>Account Country Code:</span>
+        <input type="text" class="country-input" id="countryInput" value="IN" maxlength="2" />
+      </div>
+
+      <button class="connect-btn" id="connectBtn">Connect & Discover ACs</button>
+    </div>
+  </div>
+
+  <!-- Main Devices List View -->
+  <div id="cardList" class="card-list" style="display: none;"></div>
+
+  <div id="notification" class="notification"></div>
+
+  <script>
+    let devices = [];
+
+    async function checkStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const status = await res.json();
+
+        if (!status.isConfigured) {
+          showSetup();
+          return;
+        }
+
+        document.getElementById('setupView').style.display = 'none';
+        loadDevices();
+      } catch (err) {
+        showError('Could not connect to local helper.');
+      }
+    }
+
+    function showSetup() {
+      document.getElementById('loadingView').style.display = 'none';
+      document.getElementById('cardList').style.display = 'none';
+      document.getElementById('setupView').style.display = 'flex';
+    }
+
+    async function loadDevices() {
+      const refreshBtn = document.getElementById('refreshBtn');
+      refreshBtn.style.animation = 'spin 0.6s linear infinite';
+
+      try {
+        const res = await fetch('/api/devices');
+        if (!res.ok) {
+          const err = await res.text();
+          throw new Error(err);
+        }
+        const data = await res.json();
+        devices = data;
+        render();
+      } catch (err) {
+        showError(err.message || 'Failed to load ACs');
+      } finally {
+        refreshBtn.style.animation = '';
+        document.getElementById('loadingView').style.display = 'none';
+        document.getElementById('cardList').style.display = 'flex';
+      }
+    }
+
+    function render() {
+      const container = document.getElementById('cardList');
+      container.innerHTML = '';
+
+      if (!devices || devices.length === 0) {
+        container.innerHTML = '<div class="loading-spinner">No ACs found on this account.</div>';
+        return;
+      }
+
+      devices.forEach((d) => {
+        const card = document.createElement('div');
+        const isOffline = !d.isOnline;
+        card.className = `ac-card ${d.isOn && !isOffline ? 'is-on' : ''} ${isOffline ? 'is-offline' : ''}`;
+        card.id = `card-${d.id}`;
+
+        let statusText = 'OFF';
+        let badgeClass = '';
+        if (isOffline) {
+          statusText = 'OFFLINE';
+          badgeClass = 'offline';
+        } else if (d.isOn) {
+          statusText = 'ON';
+          badgeClass = 'on';
+        }
+
+        const powerClass = (d.isOn && !isOffline) ? 'on' : '';
+        const tempText = (d.targetTemp && !isOffline) ? `${d.targetTemp}°` : '--°';
+        const modeText = d.mode || 'COOL';
+        const roomTempHtml = (d.currentTemp && !isOffline)
+          ? `<span class="room-temp" title="Current Room Temperature">(${d.currentTemp}° room)</span>`
+          : '';
+
+        card.innerHTML = `
+          <div class="row-top">
+            <div class="ac-identity">
+              <span class="ac-name">${d.name}</span>
+              ${roomTempHtml}
+              <span class="status-badge ${badgeClass}" id="badge-${d.id}" title="${isOffline ? 'Unit is offline (wall breaker off or Wi-Fi disconnected)' : ''}">${statusText}</span>
+            </div>
+            <button class="power-btn ${powerClass}" id="power-${d.id}" ${isOffline ? 'disabled' : ''} title="${isOffline ? 'Unit is offline' : 'Toggle Power'}">⏻</button>
+          </div>
+          <div class="row-bottom">
+            <div class="mode-badge ${isOffline ? 'offline' : ''}" id="mode-${d.id}">${isOffline ? '⚡ Disconnected' : '❄️ ' + modeText}</div>
+            <div class="temp-control">
+              <button class="step-btn" id="minus-${d.id}" ${(!d.isOn || isOffline) ? 'disabled' : ''}>−</button>
+              <span class="temp-display" id="temp-${d.id}">${tempText}</span>
+              <button class="step-btn" id="plus-${d.id}" ${(!d.isOn || isOffline) ? 'disabled' : ''}>+</button>
+            </div>
+          </div>
+        `;
+
+        if (!isOffline) {
+          card.querySelector(`#power-${d.id}`).addEventListener('click', () => togglePower(d));
+          card.querySelector(`#minus-${d.id}`).addEventListener('click', () => changeTemp(d, -1));
+          card.querySelector(`#plus-${d.id}`).addEventListener('click', () => changeTemp(d, +1));
+        } else {
+          card.addEventListener('click', (e) => {
+            if (!e.target.closest('button')) {
+              showError(`${d.name} is offline (switched off at breaker or Wi-Fi disconnected).`);
+            }
+          });
+        }
+
+        container.appendChild(card);
+      });
+    }
+
+    const powerInFlight = {};
+    const tempDebounceTimers = {};
+    const lastCommittedTemps = {};
+    const pendingTargetTemps = {};
+
+    async function togglePower(device) {
+      if (!device.isOnline) {
+        showError(`${device.name} is offline.`);
+        return;
+      }
+      if (powerInFlight[device.id]) {
+        return;
+      }
+      powerInFlight[device.id] = true;
+
+      const targetState = !device.isOn;
+      device.isOn = targetState;
+      render();
+
+      try {
+        const res = await fetch('/api/power', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceId: device.id, on: targetState })
+        });
+        if (!res.ok) {
+          const detail = await res.text();
+          throw new Error(detail || 'Power command failed');
+        }
+      } catch (err) {
+        showError(err.message.replace(/^Failed:\s*/, ''));
+        device.isOn = !targetState;
+        render();
+      } finally {
+        powerInFlight[device.id] = false;
+      }
+    }
+
+    function changeTemp(device, delta) {
+      if (!device.isOnline || !device.isOn) return;
+
+      const current = device.targetTemp || 24;
+      const nextTemp = Math.min(30, Math.max(16, current + delta));
+      if (nextTemp === current) return;
+
+      if (!lastCommittedTemps[device.id]) {
+        lastCommittedTemps[device.id] = current;
+      }
+
+      device.targetTemp = nextTemp;
+      pendingTargetTemps[device.id] = nextTemp;
+
+      const tempDisplay = document.getElementById(`temp-${device.id}`);
+      if (tempDisplay) tempDisplay.textContent = `${nextTemp}°`;
+
+      if (tempDebounceTimers[device.id]) {
+        clearTimeout(tempDebounceTimers[device.id]);
+      }
+
+      tempDebounceTimers[device.id] = setTimeout(async () => {
+        const sendTemp = pendingTargetTemps[device.id];
+        delete tempDebounceTimers[device.id];
+        delete pendingTargetTemps[device.id];
+
+        try {
+          const res = await fetch('/api/temperature', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ deviceId: device.id, targetTemp: sendTemp })
+          });
+          if (!res.ok) {
+            const detail = await res.text();
+            throw new Error(detail || 'Temperature change failed');
+          }
+          lastCommittedTemps[device.id] = sendTemp;
+        } catch (err) {
+          showError(err.message.replace(/^Failed:\s*/, ''));
+          const revertTo = lastCommittedTemps[device.id] || 24;
+          device.targetTemp = revertTo;
+          if (tempDisplay) tempDisplay.textContent = `${revertTo}°`;
+        }
+      }, 500);
+    }
+
+    // Onboarding Button Handlers
+    document.getElementById('pasteBtn').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/clipboard');
+        const data = await res.json();
+        if (data.text) {
+          document.getElementById('tokenInput').value = data.text;
+        }
+      } catch (err) {
+        if (navigator.clipboard) {
+          navigator.clipboard.readText().then(t => {
+            document.getElementById('tokenInput').value = t;
+          });
+        }
+      }
+    });
+
+    document.getElementById('openPortalBtn').addEventListener('click', () => {
+      fetch('/api/open-portal', { method: 'POST' });
+    });
+
+    document.getElementById('connectBtn').addEventListener('click', async () => {
+      const token = document.getElementById('tokenInput').value.trim();
+      const country = (document.getElementById('countryInput').value.trim() || 'IN').toUpperCase();
+
+      if (!token) {
+        showError('Please paste your Personal Access Token.');
+        return;
+      }
+
+      const btn = document.getElementById('connectBtn');
+      btn.textContent = 'Connecting...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/setup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pat_token: token, country_code: country })
+        });
+
+        if (!res.ok) {
+          const err = await res.text();
+          throw new Error(err || 'Failed to authenticate with LG.');
+        }
+
+        // Successfully authenticated!
+        document.getElementById('setupView').style.display = 'none';
+        document.getElementById('loadingView').style.display = 'block';
+        loadDevices();
+      } catch (err) {
+        showError(err.message || 'Connection failed');
+        btn.textContent = 'Connect & Discover ACs';
+        btn.disabled = false;
+      }
+    });
+
+    // Header buttons
+    document.getElementById('refreshBtn').addEventListener('click', loadDevices);
+    document.getElementById('quitBtn').addEventListener('click', () => {
+      fetch('/api/quit', { method: 'POST' });
+    });
+
+    function showError(msg) {
+      const n = document.getElementById('notification');
+      n.textContent = msg;
+      n.style.display = 'block';
+      setTimeout(() => { n.style.display = 'none'; }, 4500);
+    }
+
+    // Start
+    checkStatus();
+    setInterval(loadDevices, 30000);
+  </script>
+
+  <style>
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</body>
+</html>

@@ -1,0 +1,38 @@
+# Binaries & Executables
+lg-ac-menubar
+lg-thinq-go
+*.exe
+*.dll
+*.so
+*.dylib
+
+# App bundle compiled binary (keep bundle Info.plist metadata in git)
+LG AC.app/Contents/MacOS/lg-ac-menubar
+
+# Secrets & Configurations
+config.json
+*.pat
+*.token
+*.env
+*.env.*
+*.key
+*.pem
+credentials.json
+
+# Build directories & caches
+.build/
+build/
+dist/
+Packages/
+DerivedData/
+
+# Logs
+*.log
+
+# OS & Editor files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.vscode/
+.idea/
